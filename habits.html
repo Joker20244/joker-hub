@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>متتبع العادات | الملك جوكر</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="core.css"></head><body>
+<main><div class="card"><div class="row"><input id="n" placeholder="عادة جديدة (مثلاً: صلاة الفجر، مشي، قراءة)" style="flex:1;min-width:180px"><input id="e" value="✅" style="width:60px;text-align:center"><button class="pri" id="ad">إضافة</button></div></div>
+<div class="grid g3" id="st"></div><div id="hl"></div></main>
+<script>const SITE={"id": "habits", "title": "متتبع العادات", "icon": "🔥", "ac": "#4ade80"};</script><script src="core.js"></script>
+<script>let H=[];const DN=['س','ح','ن','ث','ر','خ','ج'];
+const dstr=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const last=n=>[...Array(n)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-(n-1-i));return d});
+function streak(h){let s=0;const d=new Date();if(!h.d[dstr(d)])d.setDate(d.getDate()-1);while(h.d[dstr(d)]){s++;d.setDate(d.getDate()-1)}return s}
+const save=()=>{store.set('H',H);render()};
+function init(){H=store.get('H',[{id:uid(),n:'مذاكرة ساعة',e:'📚',d:{}},{id:uid(),n:'شرب مياه 2 لتر',e:'💧',d:{}},{id:uid(),n:'مشي 20 دقيقة',e:'🚶',d:{}}]);
+$('#ad').onclick=()=>{const n=$('#n').value.trim();if(!n)return;H.push({id:uid(),n,e:$('#e').value||'✅',d:{}});$('#n').value='';save()};render()}
+function render(){const t=dstr(new Date());const dn=H.filter(h=>h.d[t]).length;const best=Math.max(0,...H.map(streak));
+$('#st').innerHTML='<div class="card"><div class="mut">النهارده</div><div class="big">'+dn+'/'+H.length+'</div></div><div class="card"><div class="mut">أطول سلسلة 🔥</div><div class="big">'+best+' يوم</div></div><div class="card"><div class="mut">إنجاز آخر 7 أيام</div><div class="big">'+(H.length?Math.round(H.reduce((a,h)=>a+last(7).filter(d=>h.d[dstr(d)]).length,0)/(H.length*7)*100):0)+'%</div></div>';
+$('#hl').innerHTML=H.map(h=>'<div class="card"><div class="row"><b style="flex:1">'+esc(h.e)+' '+esc(h.n)+'</b><span class="chip on">🔥 '+streak(h)+'</span><button class="del" data-x="'+h.id+'">✕</button></div><div class="row" style="margin-top:8px;justify-content:space-between">'+last(7).map(d=>{const k=dstr(d);return '<button data-h="'+h.id+'" data-k="'+k+'" style="flex:1;min-width:38px;'+(h.d[k]?'background:var(--ac);color:#111':'')+'">'+DN[(d.getDay()+1)%7]+'<br>'+d.getDate()+'</button>'}).join('')+'</div></div>').join('');
+$$('[data-k]').forEach(b=>b.onclick=()=>{const h=H.find(x=>x.id==b.dataset.h),k=b.dataset.k;h.d[k]?delete h.d[k]:h.d[k]=1;save()});
+$$('[data-x]').forEach(b=>b.onclick=()=>{H=H.filter(x=>x.id!=b.dataset.x);save()})}</script></body></html>
