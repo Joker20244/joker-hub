@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>دوري التوقعات | الملك جوكر</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="core.css"></head><body>
+<main><div class="card"><h3>⚽ ماتش جديد</h3><div class="row"><input id="ta" placeholder="الفريق الأول" style="width:140px" list="tl"><span>ضد</span><input id="tb2" placeholder="الفريق التاني" style="width:140px" list="tl"><datalist id="tl"><option>برشلونة</option><option>ريال مدريد</option><option>الأهلي</option><option>الزمالك</option><option>مصر</option><option>ليفربول</option></datalist><input type="date" id="dt"><button class="pri" id="am">إضافة</button></div><div class="mut">اللاعيبة: <input id="pl" placeholder="أسماء مفصولة بفاصلة" style="width:60%"></div></div>
+<div class="card"><h3>🥇 الترتيب</h3><div id="rk"></div><div class="mut">3 نقط للنتيجة بالظبط، نقطة للفائز الصح.</div></div>
+<div id="ms"></div></main>
+<script>const SITE={"id": "predict", "title": "دوري التوقعات", "icon": "🏆", "ac": "#facc15"};</script><script src="core.js"></script>
+<script>let M=[],P=[];const save=()=>{store.set('M',M);store.set('P',P);render()};
+function init(){M=store.get('M',[]);P=store.get('P',['جوكر','صاحبي']);$('#pl').value=P.join('، ');$('#dt').value=today();
+$('#pl').onchange=e=>{P=e.target.value.split(/[,،]/).map(s=>s.trim()).filter(Boolean);save()};
+$('#am').onclick=()=>{const a=$('#ta').value.trim(),b=$('#tb2').value.trim();if(!a||!b)return toast('اكتب الفريقين');M.unshift({id:uid(),a,b,d:$('#dt').value,g:{},r:null});$('#ta').value=$('#tb2').value='';save()};render()}
+const sg=(x,y)=>Math.sign(x-y);
+function pts(){const o={};P.forEach(p=>o[p]=0);M.filter(m=>m.r).forEach(m=>P.forEach(p=>{const g=m.g[p];if(!g)return;if(g[0]==m.r[0]&&g[1]==m.r[1])o[p]+=3;else if(sg(g[0],g[1])==sg(m.r[0],m.r[1]))o[p]+=1}));return o}
+function render(){const o=pts();$('#rk').innerHTML=Object.keys(o).sort((a,b)=>o[b]-o[a]).map((p,i)=>'<div class="row" style="padding:5px 0"><b style="width:30px">'+(['🥇','🥈','🥉'][i]||i+1)+'</b><span style="flex:1">'+esc(p)+'</span><span class="big" style="font-size:1.3rem">'+o[p]+'</span></div>').join('');
+$('#ms').innerHTML=M.map(m=>'<div class="card"><div class="row"><b style="flex:1;font-size:1.1rem">'+esc(m.a)+' ⚔️ '+esc(m.b)+'</b><span class="mut">'+m.d+'</span><button class="del" data-x="'+m.id+'">✕</button></div>'+P.map(p=>{const g=m.g[p]||['',''];return '<div class="row" style="margin-top:6px"><span style="width:90px">'+esc(p)+'</span><input type="number" min="0" style="width:60px" data-m="'+m.id+'" data-p="'+esc(p)+'" data-i="0" value="'+g[0]+'" '+(m.r?'disabled':'')+'><span>-</span><input type="number" min="0" style="width:60px" data-m="'+m.id+'" data-p="'+esc(p)+'" data-i="1" value="'+g[1]+'" '+(m.r?'disabled':'')+'></div>'}).join('')+'<div class="row" style="margin-top:10px"><b>النتيجة الحقيقية:</b><input type="number" min="0" style="width:60px" data-r="'+m.id+'" data-i="0" value="'+(m.r?m.r[0]:'')+'"><span>-</span><input type="number" min="0" style="width:60px" data-r="'+m.id+'" data-i="1" value="'+(m.r?m.r[1]:'')+'"><button class="sm" data-c="'+m.id+'">احسب</button>'+(m.r?'<button class="sm" data-u="'+m.id+'">فتح التوقعات</button>':'')+'</div></div>').join('')||'<p class="mut">ضيف أول ماتش وخلّي كل واحد يتوقع.</p>';
+$$('[data-p]').forEach(i=>i.onchange=()=>{const m=M.find(x=>x.id==i.dataset.m),g=m.g[i.dataset.p]||['',''];g[+i.dataset.i]=i.value==''?'':+i.value;m.g[i.dataset.p]=g;store.set('M',M)});
+$$('[data-c]').forEach(b=>b.onclick=()=>{const m=M.find(x=>x.id==b.dataset.c),v=$$('[data-r="'+m.id+'"]').map(i=>i.value);if(v[0]===''||v[1]==='')return toast('اكتب النتيجة');m.r=[+v[0],+v[1]];Object.keys(m.g).forEach(p=>{const g=m.g[p];if(g[0]===''||g[1]==='')delete m.g[p]});save()});
+$$('[data-u]').forEach(b=>b.onclick=()=>{M.find(x=>x.id==b.dataset.u).r=null;save()});
+$$('[data-x]').forEach(b=>b.onclick=()=>{M=M.filter(x=>x.id!=b.dataset.x);save()})}</script></body></html>
