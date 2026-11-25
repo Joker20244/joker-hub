@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>الدايت والمياه | الملك جوكر</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="core.css"></head><body>
+<main><div class="grid g2"><div class="card"><h3>💧 مياه النهارده</h3><div class="big" id="wc">0 / 8</div><div class="bar"><i id="wb"></i></div><div class="row" style="margin-top:8px"><button class="pri" id="w1">+ كوباية</button><button id="w0">- كوباية</button><label class="mut">الهدف <input type="number" id="wg" style="width:60px"></label></div></div>
+<div class="card"><h3>⚖️ الوزن</h3><div class="row"><input type="number" step="0.1" id="wt" placeholder="وزنك كام (كجم)" style="width:150px"><button class="pri" id="sw">سجّل</button></div><div class="mut" id="wi" style="margin-top:6px"></div><label class="mut">هدفي <input type="number" step="0.5" id="tg" style="width:80px"> كجم</label></div></div>
+<div class="card"><h3>📈 منحنى الوزن</h3><canvas id="cv" width="800" height="260" style="width:100%;height:auto"></canvas></div>
+<div class="card"><h3>🍽️ سعرات النهارده</h3><div class="row"><input id="fn" placeholder="أكلت إيه؟" style="flex:1;min-width:140px"><input type="number" id="fk" placeholder="سعرات" style="width:100px"><button class="pri" id="fa">إضافة</button></div><div class="big" id="kt">0</div><div class="bar"><i id="kb"></i></div><div class="mut"><label>الحد اليومي <input type="number" id="kg" style="width:80px"></label></div><div id="fl"></div></div></main>
+<script>const SITE={"id": "health", "title": "الدايت والمياه", "icon": "🥗", "ac": "#14b8a6"};</script><script src="core.js"></script>
+<script>let W=[],F=[];
+function init(){W=store.get('W',[]);F=store.get('F',[]);['wg','tg','kg'].forEach(i=>{$('#'+i).value=store.get(i,{wg:8,tg:70,kg:2000}[i]);$('#'+i).onchange=e=>{store.set(i,+e.target.value);render()}});
+const wc=()=>store.get('wc',{});$('#w1').onclick=()=>{const o=wc();o[today()]=(o[today()]||0)+1;store.set('wc',o);render()};$('#w0').onclick=()=>{const o=wc();o[today()]=Math.max(0,(o[today()]||0)-1);store.set('wc',o);render()};
+$('#sw').onclick=()=>{const v=+$('#wt').value;if(!v)return;W=W.filter(x=>x.d!=today());W.push({d:today(),v});W.sort((a,b)=>a.d.localeCompare(b.d));store.set('W',W);$('#wt').value='';render()};
+$('#fa').onclick=()=>{const k=+$('#fk').value;if(!k)return;F.push({id:uid(),d:today(),n:$('#fn').value||'أكل',k});store.set('F',F);$('#fn').value=$('#fk').value='';render()};window.onTheme=()=>W&&chart();render()}
+function render(){const c=(store.get('wc',{}))[today()]||0,g=store.get('wg',8);$('#wc').textContent=c+' / '+g;$('#wb').style.width=Math.min(100,c/g*100)+'%';
+if(W.length){const f=W[0].v,l=W[W.length-1].v,t=store.get('tg',70);$('#wi').textContent='الحالي '+l+' كجم | اتغير '+(l-f>0?'+':'')+(l-f).toFixed(1)+' من الأول | باقي للهدف '+(l-t).toFixed(1)}else $('#wi').textContent='سجّل أول وزن';
+const tf=F.filter(x=>x.d==today()),kt=tf.reduce((a,x)=>a+x.k,0),kg=store.get('kg',2000);$('#kt').textContent=kt+' / '+kg;$('#kb').style.width=Math.min(100,kt/kg*100)+'%';$('#kb').style.background=kt>kg?'#ff4d6d':'var(--ac)';
+$('#fl').innerHTML=tf.map(x=>'<div class="row" style="padding:4px 0;border-bottom:1px dashed var(--bd)"><span style="flex:1">'+esc(x.n)+'</span><b>'+x.k+'</b><button class="del" data-x="'+x.id+'">✕</button></div>').join('');
+$$('[data-x]').forEach(b=>b.onclick=()=>{F=F.filter(x=>x.id!=b.dataset.x);store.set('F',F);render()});chart()}
+function chart(){const cv=$('#cv'),x=cv.getContext('2d'),w=cv.width,h=cv.height,cs=getComputedStyle(document.documentElement);x.clearRect(0,0,w,h);const tx=cs.getPropertyValue('--mut'),ac=cs.getPropertyValue('--ac').trim();x.fillStyle=tx;x.font='14px Cairo,sans-serif';
+if(W.length<2){x.fillText('سجّل وزنك يومين على الأقل عشان المنحنى يظهر',20,h/2);return}
+const v=W.map(a=>a.v),mn=Math.min(...v,store.get('tg',70))-1,mx=Math.max(...v)+1,px=i=>30+i*(w-60)/(W.length-1),py=y=>h-30-(y-mn)/(mx-mn)*(h-60);
+x.strokeStyle=tx;x.setLineDash([5,5]);x.beginPath();x.moveTo(30,py(store.get('tg',70)));x.lineTo(w-30,py(store.get('tg',70)));x.stroke();x.setLineDash([]);
+x.strokeStyle=ac;x.lineWidth=3;x.beginPath();W.forEach((a,i)=>i?x.lineTo(px(i),py(a.v)):x.moveTo(px(i),py(a.v)));x.stroke();x.fillStyle=ac;W.forEach((a,i)=>{x.beginPath();x.arc(px(i),py(a.v),4,0,7);x.fill()});x.fillStyle=tx;x.fillText(W[0].d,20,h-8);x.fillText(W[W.length-1].d,w-100,h-8);x.fillText(mx.toFixed(1),0,20);x.fillText(mn.toFixed(1),0,h-34)}</script></body></html>
