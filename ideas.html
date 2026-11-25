@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>لوحة أفكار الفيديوهات | الملك جوكر</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="core.css"></head><body>
+<main><div class="card"><div class="row"><input id="t" placeholder="فكرة فيديو جديدة" style="flex:1;min-width:180px"><select id="ch"><option>سطرين</option><option>القرآن الكريم</option><option>تانية</option></select><button class="pri" id="ad">إضافة</button></div><div class="row" style="margin-top:8px"><input id="q" placeholder="🔎 بحث" style="flex:1"><select id="fc"><option value="">كل القنوات</option><option>سطرين</option><option>القرآن الكريم</option><option>تانية</option></select></div></div>
+<div class="grid g3" id="bd" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))"></div></main>
+<script>const SITE={"id": "ideas", "title": "لوحة أفكار الفيديوهات", "icon": "💡", "ac": "#f472b6"};</script><script src="core.js"></script>
+<script>const COLS=[['idea','💡 فكرة'],['script','✍️ سيناريو'],['prod','🎬 إنتاج'],['pub','🚀 اتنشر']];let I=[];
+const save=()=>{store.set('I',I);render()};
+function init(){I=store.get('I',[{id:uid(),t:'قطعة شوكولاتة غيّرت المطبخ',ch:'سطرين',st:'pub',n:'ميكروويف'},{id:uid(),t:'حكاية الطبق (البنسلين)',ch:'سطرين',st:'pub',n:''},{id:uid(),t:'الورقة اللاصقة',ch:'سطرين',st:'pub',n:''},{id:uid(),t:'فيديو رقم 5',ch:'سطرين',st:'script',n:'حركة كتير + موسيقى هادية'},{id:uid(),t:'ريلز يومي من القرآن',ch:'القرآن الكريم',st:'prod',n:''}]);
+$('#ad').onclick=()=>{const t=$('#t').value.trim();if(!t)return;I.push({id:uid(),t,ch:$('#ch').value,st:'idea',n:''});$('#t').value='';save()};$('#q').oninput=$('#fc').onchange=render;render()}
+function render(){const q=$('#q').value.trim(),f=$('#fc').value;const it=I.filter(x=>(!q||(x.t+x.n).includes(q))&&(!f||x.ch==f));
+$('#bd').innerHTML=COLS.map(([k,l],ci)=>'<div class="card" style="margin:0"><h3>'+l+' <span class="mut">('+it.filter(x=>x.st==k).length+')</span></h3>'+it.filter(x=>x.st==k).map(x=>'<div class="card" style="padding:10px;background:var(--bg2)"><b>'+esc(x.t)+'</b><div class="mut">'+esc(x.ch)+(x.n?' • '+esc(x.n):'')+'</div><div class="row" style="margin-top:6px">'+(ci>0?'<button class="sm" data-m="'+x.id+'" data-d="-1">→</button>':'')+(ci<3?'<button class="sm" data-m="'+x.id+'" data-d="1">←</button>':'')+'<button class="sm" data-e="'+x.id+'">✏️</button><button class="del" data-x="'+x.id+'">✕</button></div></div>').join('')+'</div>').join('');
+$$('[data-m]').forEach(b=>b.onclick=()=>{const x=I.find(y=>y.id==b.dataset.m),i=COLS.findIndex(c=>c[0]==x.st)+ +b.dataset.d;x.st=COLS[i][0];save()});
+$$('[data-e]').forEach(b=>b.onclick=()=>{const x=I.find(y=>y.id==b.dataset.e),n=prompt('ملاحظة على الفكرة',x.n);if(n!=null){x.n=n;save()}});
+$$('[data-x]').forEach(b=>b.onclick=()=>{I=I.filter(y=>y.id!=b.dataset.x);save()})}</script></body></html>
