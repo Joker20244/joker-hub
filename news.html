@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>لوحة الأخبار | الملك جوكر</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="core.css"><style>.ni{display:flex;flex-direction:column;gap:6px;margin:0}.ni h3{font-size:1rem}.ni .tag{align-self:flex-start}.list .ni{flex-direction:row}</style><script src="news-data.js"></script></head><body>
+<main>
+<div class="card"><div class="row"><b>آخر تحديث:</b><span id="up" class="mut"></span><span style="flex:1"></span><button class="sm" id="lay">▦ شكل العرض</button></div>
+<div class="row" style="margin-top:8px"><input id="q" placeholder="🔎 ابحث في الأخبار" style="flex:1;min-width:160px"><select id="so"><option value="new">الأحدث</option><option value="fav">المفضلة الأول</option></select></div>
+<div class="row" id="tabs" style="margin-top:8px"></div></div>
+<div class="card"><h3>🎯 خصص صفحتك</h3><div class="mut">اختار الأقسام اللي تهمك، وبعدين اضغط "صفحتي" وهتشوف بتاعتك بس.</div><div class="row" id="fol" style="margin-top:6px"></div></div>
+<div id="list" class="grid g2"></div></main>
+<script>const SITE={"id": "news", "title": "لوحة الأخبار", "icon": "📰", "ac": "#ff4d6d"};</script><script src="core.js"></script>
+<script>const SECS={all:'📌 الكل',mine:'⭐ صفحتي',football:'⚽ كورة',gta:'🎮 جيمز وGTA',ai:'🤖 ذكاء اصطناعي',edu:'🎓 تعليم',egypt:'🇪🇬 مصر'};
+let sec='all',lay=store.get('lay','cards');
+function init(){$('#up').textContent=NEWS_UPDATED;
+$('#lay').onclick=()=>{lay=lay=='cards'?'list':'cards';store.set('lay',lay);render()};
+['q','so'].forEach(i=>$('#'+i).oninput=render);render()}
+function fol(){return store.get('fol',['football','gta','ai','edu','egypt'])}
+function render(){const fv=store.get('fav',[]),rd=store.get('read',[]),F=fol();
+$('#tabs').innerHTML=Object.keys(SECS).map(k=>'<span class="chip '+(sec==k?'on':'')+'" data-s="'+k+'">'+SECS[k]+'</span>').join('');
+$$('#tabs .chip').forEach(c=>c.onclick=()=>{sec=c.dataset.s;render()});
+$('#fol').innerHTML=Object.keys(SECS).filter(k=>k!='all'&&k!='mine').map(k=>'<span class="chip '+(F.includes(k)?'on':'')+'" data-f="'+k+'">'+SECS[k]+'</span>').join('');
+$$('#fol .chip').forEach(c=>c.onclick=()=>{const k=c.dataset.f;store.set('fol',F.includes(k)?F.filter(x=>x!=k):[...F,k]);render()});
+const q=$('#q').value.trim();let it=NEWS.filter(n=>(sec=='all'||(sec=='mine'?F.includes(n.sec):n.sec==sec))&&(!q||(n.t+n.d).includes(q)));
+if($('#so').value=='fav')it.sort((a,b)=>fv.includes(b.id)-fv.includes(a.id));
+$('#list').className='grid '+(lay=='cards'?'g2':'list');
+$('#list').innerHTML=it.map(n=>'<div class="card ni" style="'+(rd.includes(n.id)?'opacity:.6':'')+'"><span class="chip tag">'+SECS[n.sec]+'</span><h3>'+esc(n.t)+'</h3><div class="mut">'+esc(n.d)+'</div><div class="row"><a href="'+n.u+'" target="_blank" rel="noopener" data-r="'+n.id+'">اقرأ المصدر ↗</a><span class="mut">'+esc(n.src)+' • '+n.date+'</span><span style="flex:1"></span><button class="sm" data-fv="'+n.id+'">'+(fv.includes(n.id)?'⭐':'☆')+'</button></div></div>').join('')||'<p class="mut">مفيش أخبار هنا.</p>';
+$$('[data-fv]').forEach(b=>b.onclick=()=>{const i=b.dataset.fv;store.set('fav',fv.includes(i)?fv.filter(x=>x!=i):[...fv,i]);render()});
+$$('[data-r]').forEach(a=>a.onclick=()=>{const r=store.get('read',[]);if(!r.includes(a.dataset.r))store.set('read',[...r,a.dataset.r])})}</script></body></html>
