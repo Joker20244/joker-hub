@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>مصروفي | الملك جوكر</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="core.css"></head><body>
+<main><div class="grid g3"><div class="card"><div class="mut">الرصيد</div><div class="big" id="bal">0</div></div><div class="card"><div class="mut">صرفت الشهر ده</div><div class="big" id="sp">0</div></div><div class="card"><div class="mut">دخل الشهر ده</div><div class="big" id="inc">0</div></div></div>
+<div class="card"><h3>➕ عملية جديدة</h3><div class="row"><select id="ty"><option value="-">صرف 🔻</option><option value="+">دخل 🔺</option></select><input type="number" id="am" placeholder="المبلغ" style="width:110px"><select id="ca"></select><input id="no" placeholder="ملاحظة" style="flex:1;min-width:120px"><button class="pri" id="ad">إضافة</button></div></div>
+<div class="card"><h3>📊 الصرف حسب النوع (الشهر ده)</h3><div id="ch"></div></div>
+<div class="card"><h3>🎯 ميزانية الشهر</h3><div class="row"><input type="number" id="bg" style="width:110px"><span>جنيه</span></div><div class="bar" style="margin-top:8px"><i id="bb"></i></div><div class="mut" id="bt"></div></div>
+<div class="card"><h3>🧾 آخر العمليات</h3><div id="ls"></div></div></main>
+<script>const SITE={"id": "money", "title": "مصروفي", "icon": "💰", "ac": "#facc15"};</script><script src="core.js"></script>
+<script>const CATS=['🍔 أكل','🚌 مواصلات','🎮 ألعاب','📱 موبايل/نت','👕 هدوم','📚 مذاكرة','🎁 هدايا','💼 دخل','✨ تانية'];
+let T=[];const save=()=>{store.set('T',T);render()};
+const fmt=n=>Math.round(n).toLocaleString('ar-EG');
+function init(){T=store.get('T',[]);$('#ca').innerHTML=CATS.map(c=>'<option>'+c+'</option>').join('');
+$('#bg').value=store.get('bud',1000);$('#bg').onchange=e=>{store.set('bud',+e.target.value||0);render()};
+$('#ad').onclick=()=>{const a=+$('#am').value;if(!a)return toast('اكتب المبلغ');T.unshift({id:uid(),a:$('#ty').value=='-'?-a:a,c:$('#ca').value,n:$('#no').value,d:today()});$('#am').value=$('#no').value='';save()};render()}
+function render(){const m=today().slice(0,7);const cm=T.filter(x=>x.d.startsWith(m));
+const sp=-cm.filter(x=>x.a<0).reduce((s,x)=>s+x.a,0),inc=cm.filter(x=>x.a>0).reduce((s,x)=>s+x.a,0);
+$('#bal').textContent=fmt(T.reduce((s,x)=>s+x.a,0));$('#sp').textContent=fmt(sp);$('#inc').textContent=fmt(inc);
+const by={};cm.filter(x=>x.a<0).forEach(x=>by[x.c]=(by[x.c]||0)-x.a);const mx=Math.max(1,...Object.values(by));
+$('#ch').innerHTML=Object.keys(by).sort((a,b)=>by[b]-by[a]).map(k=>'<div class="row" style="margin:4px 0"><span style="width:120px">'+k+'</span><div class="bar" style="flex:1"><i style="width:'+by[k]/mx*100+'%"></i></div><b>'+fmt(by[k])+'</b></div>').join('')||'<p class="mut">لسه مفيش صرف.</p>';
+const b=store.get('bud',1000),p=b?Math.min(100,sp/b*100):0;$('#bb').style.width=p+'%';$('#bb').style.background=p>90?'#ff4d6d':'var(--ac)';$('#bt').textContent='باقي '+fmt(b-sp)+' من '+fmt(b)+(sp>b?' ⚠️ عديت الميزانية':'');
+$('#ls').innerHTML=T.slice(0,30).map(x=>'<div class="row" style="padding:6px 0;border-bottom:1px dashed var(--bd)"><span style="flex:1">'+x.c+' <span class="mut">'+esc(x.n)+' • '+x.d+'</span></span><b style="color:'+(x.a<0?'#ff4d6d':'#4ade80')+'">'+(x.a<0?'':'+')+fmt(x.a)+'</b><button class="del" data-x="'+x.id+'">✕</button></div>').join('')||'<p class="mut">ضيف أول عملية.</p>';
+$$('[data-x]').forEach(b=>b.onclick=()=>{T=T.filter(x=>x.id!=b.dataset.x);save()})}</script></body></html>
