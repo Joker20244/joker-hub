@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>كروت المراجعة | الملك جوكر</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="core.css"></head><body>
+<main><div class="grid g3"><div class="card"><div class="mut">كروت</div><div class="big" id="c1">0</div></div><div class="card"><div class="mut">متقنها</div><div class="big" id="c2">0</div></div><div class="card"><div class="mut">مستحقة النهارده</div><div class="big" id="c3">0</div></div></div>
+<div class="card" style="text-align:center"><div class="row" id="dk" style="justify-content:center;margin-bottom:8px"></div><div id="fc" style="min-height:150px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:800;cursor:pointer;border:2px dashed var(--ac);border-radius:var(--r);padding:16px"></div><div class="row" style="justify-content:center;margin-top:10px" id="bt"></div></div>
+<div class="card"><h3>➕ كارت جديد</h3><div class="row"><input id="dd" placeholder="المجموعة" style="width:130px" list="dl"><datalist id="dl"></datalist><input id="q" placeholder="السؤال" style="flex:1;min-width:140px"><input id="a" placeholder="الإجابة" style="flex:1;min-width:140px"><button class="pri" id="ad">إضافة</button></div></div></main>
+<script>const SITE={"id": "cards", "title": "كروت المراجعة", "icon": "🧠", "ac": "#a78bfa"};</script><script src="core.js"></script>
+<script>const SEED=[['النعت','ما هو النعت؟','تابع يكمّل المنعوت ويبيّن صفة من صفاته'],['النعت','النعت يتبع المنعوت في إيه؟','الإعراب، والتعريف والتنكير، والإفراد والتثنية والجمع، والتذكير والتأنيث (في الحقيقي)'],['النعت','أنواع النعت؟','نعت حقيقي ونعت سببي'],['النعت','أعرب: جاء الطالبُ المجتهدُ','المجتهدُ: نعت مرفوع وعلامة رفعه الضمة'],['نبذة','مين اخترع الميكروويف بالصدفة؟','بيرسي سبنسر، قطعة شوكولاتة ذابت في جيبه'],['نبذة','اكتشاف البنسلين حصل إزاي؟','ألكسندر فليمنج لاحظ إن عفن قتل البكتيريا في طبق منسي'],['إنجليزي','Past of "go"','went'],['إنجليزي','Plural of "child"','children']];
+let C=[],dk='الكل',cur=null,show=false;const INT=[0,1,3,7,14,30];
+const save=()=>{store.set('C',C);render()};
+function init(){C=store.get('C',null)||SEED.map(s=>({id:uid(),d:s[0],q:s[1],a:s[2],b:0,due:today()}));
+$('#ad').onclick=()=>{if(!$('#q').value.trim()||!$('#a').value.trim())return;C.push({id:uid(),d:$('#dd').value.trim()||'عام',q:$('#q').value,a:$('#a').value,b:0,due:today()});$('#q').value=$('#a').value='';save()};
+$('#fc').onclick=()=>{show=!show;draw()};render()}
+function pick(){const t=today();const p=C.filter(c=>(dk=='الكل'||c.d==dk)&&c.due<=t);cur=p.length?p[Math.floor(Math.random()*p.length)]:null;show=false}
+function render(){const t=today();$('#c1').textContent=C.length;$('#c2').textContent=C.filter(c=>c.b>=4).length;$('#c3').textContent=C.filter(c=>c.due<=t).length;
+const ds=['الكل',...new Set(C.map(c=>c.d))];$('#dk').innerHTML=ds.map(d=>'<span class="chip '+(dk==d?'on':'')+'" data-d="'+esc(d)+'">'+esc(d)+'</span>').join('');
+$('#dl').innerHTML=ds.slice(1).map(d=>'<option>'+esc(d)+'</option>').join('');
+$$('#dk .chip').forEach(c=>c.onclick=()=>{dk=c.dataset.d;pick();render()});
+if(!cur||!C.includes(cur)||cur.due>t)pick();draw()}
+function draw(){const f=$('#fc'),b=$('#bt');if(!cur){f.textContent='🎉 خلصت كل كروت النهارده!';b.innerHTML='';return}
+f.innerHTML=show?'<div><div class="mut" style="font-size:.9rem">الإجابة</div>'+esc(cur.a)+'</div>':'<div><div class="mut" style="font-size:.9rem">'+esc(cur.d)+' — اضغط تشوف الإجابة</div>'+esc(cur.q)+'</div>';
+b.innerHTML=show?'<button id="no">😵 مش فاكر</button><button id="ok" class="pri">😎 عارفها</button>':'<button id="sh">👀 اعرض الإجابة</button>';
+if(show){$('#no').onclick=()=>grade(0);$('#ok').onclick=()=>grade(1)}else $('#sh').onclick=()=>{show=true;draw()}}
+function grade(ok){cur.b=ok?Math.min(5,cur.b+1):0;const d=new Date();d.setDate(d.getDate()+INT[cur.b]);cur.due=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');cur=null;save()}</script></body></html>
