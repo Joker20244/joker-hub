@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>جدول المذاكرة | الملك جوكر</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="core.css"></head><body>
+<main>
+<div class="card"><h2>النهارده <span id="dn"></span></h2><div class="row"><div class="big" id="pc">0%</div><div style="flex:1;min-width:150px"><div class="bar"><i id="pb" style="width:0"></i></div><div class="mut" id="ps"></div></div></div><div id="tl"></div></div>
+<div class="card"><h3>➕ حصة / جلسة مذاكرة</h3><div class="row"><select id="d"></select><input type="time" id="a" value="16:00"><input type="time" id="b" value="17:30"><input id="s" placeholder="المادة (عربي، فيزياء..)" list="sl"><datalist id="sl"><option>عربي - مستر محمد صلاح</option><option>إنجليزي</option><option>فيزياء</option><option>كيمياء</option><option>أحياء</option><option>تاريخ</option><option>مراجعة</option></datalist><input id="n" placeholder="ملاحظة (اختياري)"><button class="pri" id="ad">إضافة</button></div></div>
+<div class="card"><h3>📅 الأسبوع كله</h3><div class="row" id="fl"></div><div class="grid g2" id="wk" style="margin-top:10px"></div></div>
+<div class="card"><h3>🎯 هدف الأسبوع</h3><div class="row"><input type="number" id="gh" min="1" max="80" style="width:90px"> <span>ساعة مذاكرة في الأسبوع</span></div><div class="bar" style="margin-top:8px"><i id="gb" style="width:0"></i></div><div class="mut" id="gt"></div></div>
+</main>
+<script>const SITE={"id": "study", "title": "جدول المذاكرة", "icon": "📚", "ac": "#4cc9f0"};</script><script src="core.js"></script>
+<script>const DAYS=['السبت','الأحد','الاتنين','التلات','الأربع','الخميس','الجمعة'];
+const dayIdx=()=>{const g=new Date().getDay();return (g+1)%7}; // السبت=0
+let L=[],flt='all';
+const colors=['#4cc9f0','#ff4d6d','#4ade80','#facc15','#a78bfa','#f472b6','#14b8a6','#fb923c'];
+const colOf=s=>{let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))%997;return colors[h%colors.length]};
+const mins=(a,b)=>{const [x,y]=a.split(':'),[p,q]=b.split(':');return Math.max(0,(+p*60+ +q)-(+x*60+ +y))};
+const save=()=>{store.set('L',L);render()};
+function init(){L=store.get('L',[{id:uid(),day:0,a:'16:00',b:'17:30',s:'عربي - مستر محمد صلاح',n:'حصة النعت',done:{}},{id:uid(),day:0,a:'18:00',b:'19:00',s:'مراجعة',n:'',done:{}},{id:uid(),day:2,a:'17:00',b:'18:30',s:'فيزياء',n:'',done:{}}]);
+$('#d').innerHTML=DAYS.map((x,i)=>'<option value="'+i+'" '+(i==dayIdx()?'selected':'')+'>'+x+'</option>').join('');
+$('#ad').onclick=()=>{const s=$('#s').value.trim();if(!s)return toast('اكتب المادة');L.push({id:uid(),day:+$('#d').value,a:$('#a').value,b:$('#b').value,s,n:$('#n').value,done:{}});$('#s').value=$('#n').value='';save();toast('اتضافت ✅')};
+$('#gh').value=store.get('goal',15);$('#gh').onchange=e=>{store.set('goal',+e.target.value||15);render()};
+render()}
+function render(){const t=today(),di=dayIdx();$('#dn').textContent='— '+DAYS[di];
+const td=L.filter(x=>x.day==di).sort((a,b)=>a.a.localeCompare(b.a));const dn=td.filter(x=>x.done[t]).length;const pc=td.length?Math.round(dn/td.length*100):0;
+$('#pc').textContent=pc+'%';$('#pb').style.width=pc+'%';$('#ps').textContent=dn+' من '+td.length+' خلصوا';
+$('#tl').innerHTML=td.length?td.map(x=>row(x,t)).join(''):'<p class="mut">مفيش حاجة النهارده. ريّح أو ضيف جلسة 😎</p>';
+const subs=[...new Set(L.map(x=>x.s))];
+$('#fl').innerHTML='<span class="chip '+(flt=='all'?'on':'')+'" data-f="all">الكل</span>'+subs.map(s=>'<span class="chip '+(flt==s?'on':'')+'" data-f="'+esc(s)+'">'+esc(s)+'</span>').join('');
+$$('#fl .chip').forEach(c=>c.onclick=()=>{flt=c.dataset.f;render()});
+$('#wk').innerHTML=DAYS.map((d,i)=>{const it=L.filter(x=>x.day==i&&(flt=='all'||x.s==flt)).sort((a,b)=>a.a.localeCompare(b.a));return '<div class="card" style="margin:0;'+(i==di?'border-color:var(--ac)':'')+'"><b>'+d+'</b>'+(it.map(x=>row(x,t,1)).join('')||'<div class="mut">—</div>')+'</div>'}).join('');
+$$('[data-t]').forEach(b=>b.onclick=()=>{const x=L.find(y=>y.id==b.dataset.t);x.done[t]?delete x.done[t]:x.done[t]=1;save()});
+$$('[data-x]').forEach(b=>b.onclick=()=>{L=L.filter(y=>y.id!=b.dataset.x);save()});
+let tot=0,dn2=0;L.forEach(x=>{const m=mins(x.a,x.b);tot+=m;if(Object.keys(x.done).length)dn2+=m*Object.keys(x.done).length});
+const g=store.get('goal',15)*60;const pr=Math.min(100,Math.round(Math.min(tot,g)/g*100));$('#gb').style.width=pr+'%';$('#gt').textContent='مجدول '+(tot/60).toFixed(1)+' ساعة من '+g/60+' | اتذاكر فعلاً '+(dn2/60).toFixed(1)+' ساعة (مجموع المرات)'}
+function row(x,t,small){const d=x.done[t];return '<div class="row" style="padding:6px 0;border-bottom:1px dashed var(--bd)"><button class="sm" data-t="'+x.id+'">'+(d?'✅':'⬜')+'</button><div style="flex:1" class="'+(d&&!small?'done':'')+'"><span style="color:'+colOf(x.s)+'">●</span> <b>'+esc(x.s)+'</b> <span class="mut">'+x.a+'–'+x.b+(x.n?' • '+esc(x.n):'')+'</span></div><button class="del" data-x="'+x.id+'">✕</button></div>'}</script></body></html>
