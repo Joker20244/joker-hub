@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>وضع التركيز | الملك جوكر</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="core.css"></head><body>
+<main><div class="card" style="text-align:center"><div class="row" id="md" style="justify-content:center"></div><div class="big" id="tm" style="font-size:4.5rem;margin:10px 0">25:00</div><div class="bar"><i id="pg" style="width:0"></i></div><div class="row" style="justify-content:center;margin-top:12px"><button class="pri" id="go">▶️ ابدأ</button><button id="rs2">↺ إعادة</button></div><div class="mut" style="margin-top:8px">بتذاكر إيه؟ <input id="tk" placeholder="المادة / المهمة" style="width:180px"></div></div>
+<div class="grid g3"><div class="card"><div class="mut">جلسات النهارده</div><div class="big" id="s1">0</div></div><div class="card"><div class="mut">دقايق تركيز النهارده</div><div class="big" id="s2">0</div></div><div class="card"><div class="mut">إجمالي الدقايق</div><div class="big" id="s3">0</div></div></div>
+<div class="card"><h3>⚙️ إعدادات</h3><div class="row"><label>تركيز <input type="number" id="w" style="width:70px"></label><label>راحة <input type="number" id="br" style="width:70px"></label><label><input type="checkbox" id="sn"> صوت عند الانتهاء</label></div></div>
+<div class="card"><h3>📜 آخر الجلسات</h3><div id="lg"></div></div></main>
+<script>const SITE={"id": "focus", "title": "وضع التركيز", "icon": "⏱️", "ac": "#ff6b35"};</script><script src="core.js"></script>
+<script>const MODES={f:['🎯 تركيز'],b:['☕ راحة']};let mode='f',left=0,total=0,iv=null,S=[];
+function dur(){return (mode=='f'?store.get('w',25):store.get('br',5))*60}
+function init(){S=store.get('S',[]);$('#w').value=store.get('w',25);$('#br').value=store.get('br',5);$('#sn').checked=store.get('sn',true);
+$('#w').onchange=e=>{store.set('w',+e.target.value||25);reset()};$('#br').onchange=e=>{store.set('br',+e.target.value||5);reset()};$('#sn').onchange=e=>store.set('sn',e.target.checked);
+$('#go').onclick=toggle;$('#rs2').onclick=reset;reset();stats()}
+function modes(){$('#md').innerHTML=Object.keys(MODES).map(k=>'<span class="chip '+(mode==k?'on':'')+'" data-m="'+k+'">'+MODES[k][0]+'</span>').join('');$$('#md .chip').forEach(c=>c.onclick=()=>{mode=c.dataset.m;reset()})}
+function draw(){const m=Math.floor(left/60),s=left%60;$('#tm').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');$('#pg').style.width=(total?(1-left/total)*100:0)+'%';document.title=(iv?$('#tm').textContent+' | ':'')+SITE.title}
+function reset(){clearInterval(iv);iv=null;total=left=dur();$('#go').textContent='▶️ ابدأ';modes();draw()}
+function toggle(){if(iv){clearInterval(iv);iv=null;$('#go').textContent='▶️ كمّل';return}
+$('#go').textContent='⏸️ إيقاف';const end=Date.now()+left*1000;iv=setInterval(()=>{left=Math.max(0,Math.round((end-Date.now())/1000));draw();if(left<=0)finish()},500)}
+function finish(){clearInterval(iv);iv=null;if(mode=='f'){S.unshift({d:today(),m:Math.round(total/60),t:$('#tk').value||'—',at:new Date().toTimeString().slice(0,5)});S=S.slice(0,200);store.set('S',S)}
+if(store.get('sn',true)){try{const a=new (window.AudioContext||webkitAudioContext)();[0,.3,.6].forEach(t=>{const o=a.createOscillator();o.connect(a.destination);o.frequency.value=880;o.start(a.currentTime+t);o.stop(a.currentTime+t+.2)})}catch(e){}}
+toast(mode=='f'?'خلصت جلسة! خد راحة 🎉':'الراحة خلصت، يلا نكمل 💪');mode=mode=='f'?'b':'f';reset();stats()}
+function stats(){const t=today(),td=S.filter(x=>x.d==t);$('#s1').textContent=td.length;$('#s2').textContent=td.reduce((a,x)=>a+x.m,0);$('#s3').textContent=S.reduce((a,x)=>a+x.m,0);$('#lg').innerHTML=S.slice(0,12).map(x=>'<div class="row" style="padding:4px 0;border-bottom:1px dashed var(--bd)"><b style="flex:1">'+esc(x.t)+'</b><span class="mut">'+x.m+' د • '+x.d+' '+x.at+'</span></div>').join('')||'<p class="mut">لسه مفيش جلسات.</p>'}</script></body></html>
